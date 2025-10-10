@@ -8,6 +8,7 @@
 #include "helpfunc.h"
 #include "stackfunctions.h"
 #include "consts.h"
+#include "dumpfuncs.h"
 
 #ifdef HASH_DJB2
 extern uint64_t hashes[MAX_COUNT_OF_HASHES];
@@ -15,82 +16,6 @@ extern size_t cntOfHashes;
 #endif
 
 extern FILE* logfileStack;
-
-void StackDump(Stack* stk, const char* file, const char* func, int line)
-{
-    int errors = StackVerify(stk);
-    fprintf(logfileStack, "\nStackDump from %s at %s:%d\n"
-                "stack [%p]\n", func, file, line, stk);
-
-#if defined(CANARY_PROTECT) || defined(HASH_DJB2)
-    if (errors & DAMAGED_STACK)
-    {
-        fprintf(logfileStack, "The protection was triggered. The stack is damaged.\n");
-        fflush(logfileStack);
-        return;
-    }
-#endif
-    if (errors & NULL_STACK_POINTER)
-    {
-        fprintf(logfileStack, "There is no stack at all. Oops.\n");
-        fflush(logfileStack);
-        return;
-    }
-
-    fprintf(logfileStack, "{\n"
-                     "   capacity = %zd ", stk->capacity);
-    if (errors & BAD_CAPACITY) {
-        fprintf(logfileStack, "(BAD_CAPACITY)\n");
-    } else {
-        fprintf(logfileStack, "\n");
-    }
-
-    fprintf(logfileStack, "   size = %zd ", stk->size);
-    if (errors & BAD_SIZE) {
-        fprintf(logfileStack, "(BAD_SIZE)\n");
-    } else {
-        fprintf(logfileStack, "\n");
-    }
-
-    fprintf(logfileStack, "   data[%p] ", stk->data);
-    if (errors & NULL_DATA_POINTER) {
-        fprintf(logfileStack, "(NULL_DATA_POINTER)\n"
-                         "}\n");
-        fflush(logfileStack);
-        return;
-    } else {
-        fprintf(logfileStack, "\n");
-    }
-
-    bool isCapacityValid = !(errors & BAD_CAPACITY);
-    bool isSizeValid     = !(errors & BAD_SIZE);
-
-    if (isCapacityValid)
-    {
-        fprintf(logfileStack, "   {\n");
-        for (ssize_t i = 0; i < stk->capacity; i++)
-        {
-            if (isSizeValid && i < stk->size)
-            {
-                fprintf(logfileStack, "      *");
-            } else {
-                fprintf(logfileStack, "       ");
-            }
-            fprintf(logfileStack, "[%zd] = ", i);
-            FprintfStack_t(logfileStack, stk->data[i], "\n");
-        }
-
-        fprintf(logfileStack, "   }\n"
-                         "}\n");
-
-        if (isCapacityValid && isSizeValid)
-        {
-            fprintf(logfileStack, "No errors found\n");
-        }
-    }
-
-    fflush(logfileStack);
-}
 
 int StackVerify(Stack* stk)
 {
@@ -215,23 +140,27 @@ int StackPush(Stack* stk, Stack_t newElem)
     return STACK_OK;
 }
 
-Stack_t StackGetElem(Stack* stk)
+Stack_t StackGetElem(Stack* stk, Stack_t* getElem)
 {
     int errors = StackVerify(stk);
     if (errors)
     {
         PrintErrorInfo(__FILE__, __func__, __LINE__, "A stack containing errors was passed. Action cancelled.\n");
         StackDump(stk, __FILE__, __func__, __LINE__);
-        return INT_MAX;
+        return errors;
     }
 
+    // Смысловое содержание функции
     if (stk->size == 0)
     {
-        PrintErrorInfo(__FILE__, __func__, __LINE__, "Attempting to get an element from an empty stack. Action cancelled.\n");
-        return INT_MAX;
+        PrintErrorInfo(__FILE__, __func__, __LINE__, "Attempt to get an element from an empty stack. Action cancelled.\n");
+        return BAD_SIZE;
     }
 
-    return stk->data[stk->size - 1];
+    *getElem = stk->data[stk->size - 1];
+    //
+
+    return STACK_OK;
 }
 
 int StackPop(Stack* stk, Stack_t* popElem)
