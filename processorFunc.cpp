@@ -69,9 +69,8 @@ int DoProgram(SPU* process)
         fprintf(logfileProc, "ERROR: Invalid process was passed.\n");
     }
 
-    int numOfString = 1;
     int result = 0;
-    while ((result = DoCommand(process, &numOfString)) == 0)
+    while ((result = DoCommand(process)) == 0)
     {
         continue;
     }
@@ -103,26 +102,6 @@ int SPUCtor(SPU* process, int* buffer, size_t lengthOfBuffer)
     process->lengthOfCode = lengthOfBuffer;
     process->pc = 0;
 
-    process->whereStartEveryString = (size_t*) calloc(lengthOfBuffer + 1, sizeof(size_t));
-    size_t j = 1;
-    for (size_t i = 0; i < lengthOfBuffer; i++)
-    {
-        if (IsThereCommandIAmongListed(process->code[i], 11, HLT, POP, OUT, ADD, SUB, MUL, DIV, MOD, SQR, IN, DMP))
-        {
-            process->whereStartEveryString[j] = i;
-            //printf("%zu ", i);   // For debug
-            j++;
-        }
-        else
-        {
-            process->whereStartEveryString[j] = i;
-            //printf("%zu ", i);   // For debug
-            i++;
-            j++;
-        }
-    }
-    process->cntOfLines = j - 1;
-
     return 0;
 }
 
@@ -140,19 +119,9 @@ int SPUVerify(SPU* process)
         errors |= NULL_CODE_POINTER;
     }
 
-    if (process->whereStartEveryString == NULL)
-    {
-        errors |= NULL_WHERE_START_EVERY_STRING_POINTER;
-    }
-
     if (process->pc >= process->lengthOfCode)
     {
         errors |= BAD_PC;
-    }
-
-    if (process->cntOfLines > process->lengthOfCode)
-    {
-        errors |= BAD_CNT_OF_LINES;
     }
 
     if (StackVerify(&(process->apparatStack)))
@@ -181,14 +150,12 @@ int SPUDtor(SPU* process)
     process->code = NULL;
     process->lengthOfCode = 0;
     process->pc = 0;
-    free(process->whereStartEveryString);
-    process->whereStartEveryString = NULL;
     memset(process->registers, 0, sizeof(int) * CNT_OF_REGISTERS);
 
     return 0;
 }
 
-int DoCommand(SPU* process, int* numOfString)
+int DoCommand(SPU* process)
 {
     //printf("%zu ", process->pc);
     switch(process->code[process->pc])
@@ -196,48 +163,47 @@ int DoCommand(SPU* process, int* numOfString)
         case HLT:
             return 1;
         case PUSH:
-            return Push(process, numOfString);
+            return Push(process);
         case PUSHREG:
-            return PushReg(process, numOfString);
+            return PushReg(process);
         case POP:
-            return Pop(process, numOfString);
+            return Pop(process);
         case POPREG:
-            return PopReg(process, numOfString);
+            return PopReg(process);
         case IN:
-            return In(process, numOfString);
+            return In(process);
         case DMP:
-            SPUDump(process, numOfString);
+            SPUDump(process);
             (process->pc)++;
-            (*numOfString)++;
             return 0;
         case OUT:
-            return Out(process, numOfString);
+            return Out(process);
         case ADD:
-            return Add(process, numOfString);
+            return Add(process);
         case SUB:
-            return Sub(process, numOfString);
+            return Sub(process);
         case MUL:
-            return Mul(process, numOfString);
+            return Mul(process);
         case DIV:
-            return Div(process, numOfString);
+            return Div(process);
         case MOD:
-            return Mod(process, numOfString);
+            return Mod(process);
         case SQR:
-            return Sqr(process, numOfString);
+            return Sqr(process);
         case JMP:
-            return Jmp(process, numOfString);
+            return Jmp(process);
         case JB:
-            return Jb(process, numOfString);
+            return Jb(process);
         case JBE:
-            return Jbe(process, numOfString);
+            return Jbe(process);
         case JA:
-            return Ja(process, numOfString);
+            return Ja(process);
         case JAE:
-            return Jae(process, numOfString);
+            return Jae(process);
         case JE:
-            return Je(process, numOfString);
+            return Je(process);
         case JNE:
-            return Jne(process, numOfString);
+            return Jne(process);
         default:
             return 1;
     }
@@ -245,12 +211,12 @@ int DoCommand(SPU* process, int* numOfString)
 
 // Basic commands
 
-int Push(SPU* process, int* numOfString)
+int Push(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"push\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -259,22 +225,21 @@ int Push(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"push\".\n");
         return result;
     }
 
     (process->pc)++;
-    (*numOfString)++;
 
     return 0;
 }
 
-int PushReg(SPU* process, int* numOfString)
+int PushReg(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"pushreg\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -283,22 +248,21 @@ int PushReg(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"pushreg\".\n");
         return result;
     }
 
     (process->pc)++;
-    (*numOfString)++;
 
     return 0;
 }
 
-int Pop(SPU* process, int* numOfString)
+int Pop(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"pop\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -308,21 +272,20 @@ int Pop(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"pop\".\n");
         return result;
     }
 
-    (*numOfString)++;
 
     return 0;
 }
 
-int PopReg(SPU* process, int* numOfString)
+int PopReg(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"popreg\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -332,23 +295,22 @@ int PopReg(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"popreg\".\n");
         return result;
     }
 
     process->registers[process->code[process->pc]] = temp;
     (process->pc)++;
-    (*numOfString)++;
 
     return 0;
 }
 
-int Out(SPU* process, int* numOfString)
+int Out(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"out\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -358,22 +320,21 @@ int Out(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"out\".\n");
         return result;
     }
 
     fprintf(output, "%d ", gotNumber);
-    (*numOfString)++;
 
     return 0;
 }
 
-int Add(SPU* process, int* numOfString)
+int Add(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"add\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -385,21 +346,20 @@ int Add(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"add\".\n");
         return result;
     }
 
-    (*numOfString)++;
 
     return 0;
 }
 
-int Sub(SPU* process, int* numOfString)
+int Sub(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"sub\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -411,21 +371,20 @@ int Sub(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"sub\".\n");
         return result;
     }
 
-    (*numOfString)++;
 
     return 0;
 }
 
-int Mul(SPU* process, int* numOfString)
+int Mul(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"mul\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -437,21 +396,20 @@ int Mul(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"mul\".\n");
         return result;
     }
 
-    (*numOfString)++;
 
     return 0;
 }
 
-int Div(SPU* process, int* numOfString)
+int Div(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"div\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -462,7 +420,7 @@ int Div(SPU* process, int* numOfString)
 
     if (temp1 == 0)
     {
-        fprintf(logfileProc, "ERROR: Division by zero on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Division by zero in command \"div\".\n");
         return 1;
     }
 
@@ -470,21 +428,20 @@ int Div(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"div\".\n");
         return result;
     }
 
-    (*numOfString)++;
 
     return 0;
 }
 
-int Mod(SPU* process, int* numOfString)
+int Mod(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"mod\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -495,7 +452,7 @@ int Mod(SPU* process, int* numOfString)
 
     if (temp1 == 0)
     {
-        fprintf(logfileProc, "ERROR: Division by zero on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Division by zero in command \"mod\".\n");
         return 1;
     }
 
@@ -503,21 +460,20 @@ int Mod(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"mod\".\n");
         return result;
     }
 
-    (*numOfString)++;
 
     return 0;
 }
 
-int Sqr(SPU* process, int* numOfString)
+int Sqr(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"sqr\".\n");
+        SPUDump(process);
         return 1;
     }
 
@@ -528,7 +484,7 @@ int Sqr(SPU* process, int* numOfString)
 
     if (temp < 0)
     {
-        fprintf(logfileProc, "ERROR: Square root of a negative number on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Square root of a negative number in command \"sqr\".\n");
         return 1;
     }
 
@@ -536,52 +492,51 @@ int Sqr(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"sqr\".\n");
         return result;
     }
 
-    (*numOfString)++;
 
     return 0;
 }
 
-int Jmp(SPU* process, int* numOfString)
+int Jmp(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"jmp\".\n");
+        SPUDump(process);
         return 1;
     }
 
     (process->pc)++;
 
-    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] > process->cntOfLines)
+    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] >= process->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent line on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address in command \"jmp\".\n");
         return 1;
     }
     (process->pc)++;
 
-    *numOfString = process->code[process->pc];
-    process->pc = process->whereStartEveryString[process->code[process->pc]];
+    process->pc = (size_t)process->code[process->pc];
+
     return 0;
 }
 
-int Jb(SPU* process, int* numOfString)
+int Jb(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"jb\".\n");
+        SPUDump(process);
         return 1;
     }
 
     (process->pc)++;
 
-    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] > process->cntOfLines)
+    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] >= process->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent line on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address in command \"jb\".\n");
         return 1;
     }
 
@@ -592,38 +547,36 @@ int Jb(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"jb\".\n");
         return result;
     }
 
     if (temp1 < temp2)
     {
-        *numOfString = process->code[process->pc];
-        process->pc = process->whereStartEveryString[process->code[process->pc]];
+        process->pc = (size_t)process->code[process->pc];
     }
     else
     {
         (process->pc)++;
-        (*numOfString)++;
     }
 
     return 0;
 }
 
-int Jbe(SPU* process, int* numOfString)
+int Jbe(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"jbe\".\n");
+        SPUDump(process);
         return 1;
     }
 
     (process->pc)++;
 
-    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] > process->cntOfLines)
+    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] >= process->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent line on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address in command \"jbe\".\n");
         return 1;
     }
 
@@ -634,38 +587,36 @@ int Jbe(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"jbe\".\n");
         return result;
     }
 
     if (temp1 <= temp2)
     {
-        *numOfString = process->code[process->pc];
-        process->pc = process->whereStartEveryString[process->code[process->pc]];
+        process->pc = (size_t)process->code[process->pc];
     }
     else
     {
         (process->pc)++;
-        (*numOfString)++;
     }
 
     return 0;
 }
 
-int Ja(SPU* process, int* numOfString)
+int Ja(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"ja\".\n");
+        SPUDump(process);
         return 1;
     }
 
     (process->pc)++;
 
-    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] > process->cntOfLines)
+    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] >= process->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent line on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address in command \"ja\".\n");
         return 1;
     }
 
@@ -676,38 +627,36 @@ int Ja(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"ja\".\n");
         return result;
     }
 
     if (temp1 > temp2)
     {
-        *numOfString = process->code[process->pc];
-        process->pc = process->whereStartEveryString[process->code[process->pc]];
+        process->pc = (size_t)process->code[process->pc];
     }
     else
     {
         (process->pc)++;
-        (*numOfString)++;
     }
 
     return 0;
 }
 
-int Jae(SPU* process, int* numOfString)
+int Jae(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"jae\".\n");
+        SPUDump(process);
         return 1;
     }
 
     (process->pc)++;
 
-    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] > process->cntOfLines)
+    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] >= process->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent line on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address in command \"jae\".\n");
         return 1;
     }
 
@@ -718,38 +667,36 @@ int Jae(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"jae\".\n");
         return result;
     }
 
     if (temp1 >= temp2)
     {
-        *numOfString = process->code[process->pc];
-        process->pc = process->whereStartEveryString[process->code[process->pc]];
+        process->pc = (size_t)process->code[process->pc];
     }
     else
     {
         (process->pc)++;
-        (*numOfString)++;
     }
 
     return 0;
 }
 
-int Je(SPU* process, int* numOfString)
+int Je(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"je\".\n");
+        SPUDump(process);
         return 1;
     }
 
     (process->pc)++;
 
-    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] > process->cntOfLines)
+    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] >= process->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent line on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address in command \"je\".\n");
         return 1;
     }
 
@@ -760,38 +707,36 @@ int Je(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"je\".\n");
         return result;
     }
 
     if (temp1 == temp2)
     {
-        *numOfString = process->code[process->pc];
-        process->pc = process->whereStartEveryString[process->code[process->pc]];
+        process->pc = (size_t)process->code[process->pc];
     }
     else
     {
         (process->pc)++;
-        (*numOfString)++;
     }
 
     return 0;
 }
 
-int Jne(SPU* process, int* numOfString)
+int Jne(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"jne\".\n");
+        SPUDump(process);
         return 1;
     }
 
     (process->pc)++;
 
-    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] > process->cntOfLines)
+    if (process->code[process->pc] < 0 || (size_t)process->code[process->pc] >= process->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent line on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address in command \"jne\".\n");
         return 1;
     }
 
@@ -802,45 +747,49 @@ int Jne(SPU* process, int* numOfString)
 
     if (result)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"jne\".\n");
         return result;
     }
 
     if (temp1 != temp2)
     {
-        *numOfString = process->code[process->pc];
-        process->pc = process->whereStartEveryString[process->code[process->pc]];
+        process->pc = (size_t)process->code[process->pc];
     }
     else
     {
         (process->pc)++;
-        (*numOfString)++;
     }
 
     return 0;
 }
 
-int In(SPU* process, int* numOfString)
+int In(SPU* process)
 {
     if (SPUVerify(process))
     {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed on line %d\n", *numOfString);
-        SPUDump(process, numOfString);
+        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"in\".\n");
+        SPUDump(process);
         return 1;
     }
 
     (process->pc)++;
     int temp = 0;
-    scanf("%d", &temp);
-    int result = StackPush(&(process->apparatStack), temp);
+    int result = scanf("%d", &temp);
 
-    if (result)
+    if (result <= 0)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while handling the stack on line %d\n", *numOfString);
+        fprintf(logfileProc, "ERROR: An error occurred while reading input in command \"in\".\n");
         return result;
     }
 
-    (*numOfString)++;
+    result = StackPush(&(process->apparatStack), temp);
+
+    if (result)
+    {
+        fprintf(logfileProc, "ERROR: An error occurred while handling the stack in command \"in\".\n");
+        return result;
+    }
+
 
     return 0;
 }
