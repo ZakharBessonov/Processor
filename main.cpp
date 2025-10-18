@@ -1,47 +1,40 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "consts.h"
-#include "processorFunc.h"
+#include "spu_consts.h"
+#include "spu_generalFuncs.h"
+#include "spu_readFuncs.h"
+#include "spu_structs.h"
 
-FILE* output = NULL;
+
 FILE* logfileProc = NULL;
-FILE* logfileStack = NULL;
-
-#ifdef HASH_DJB2
-
-uint64_t hashes[MAX_COUNT_OF_HASHES] = {};
-size_t cntOfHashes = 0;
-
-#endif
 
 int main(int argc, const char *argv[])
 {
     logfileProc = fopen(LOG_FILE_PROC_NAME, "w");
-    logfileStack = fopen(LOG_FILE_STACK_NAME, "w");
 
-    if (argc <= 2)
+    if (argc <= REQUIRED_NUMBER_OF_ARGUMENTS)
     {
-        fprintf(logfileProc, "ERROR: Required files were not passed!\n");
+        fprintf(logfileAsm, "ERROR: Too little arguments were passed.\n"
+                            "Input data format: execFileName.bin outputFileName.txt\n"
+                            "                                      (or stdout)\n");
         fclose(logfileProc);
-        fclose(logfileStack);
         return 1;
     }
 
-    if (strcmp(argv[2], "stdout") == 0)
+    Spu spu = {};
+    if (SpuCtor(spu, argv[1], argv[2]))
     {
-        output = stdout;
-    }
-    else
-    {
-        output = fopen(argv[2], "w");
+        return 1;
     }
 
-    Processor(argv[1]);
+    if (SpuExecProgram(spu))
+    {
+        return 1;
+    }
 
+    SpuDtor(spu);
     fclose(logfileProc);
-    fclose(logfileStack);
-    fclose(output);
 
     return 0;
 }

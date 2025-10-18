@@ -8,7 +8,7 @@ flags=-I/Users/zaharbessonov/Desktop/Учёба\ в\ институте\ /Ин
 
 CC=g++
 
-sources=main.cpp helpfunc.cpp processorFunc.cpp stackfunctions.cpp dumpfuncs.cpp
+sources=main.cpp spu_readFuncs.cpp spu_generalFuncs.cpp spu_functionsForCommands.cpp spu_dumpFuncs.cpp stackfunctions.cpp
 
 all:
 	$(CC) $(sources) -o processor $(flags)
