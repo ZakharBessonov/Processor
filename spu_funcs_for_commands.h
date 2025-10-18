@@ -1,7 +1,7 @@
 #ifndef SPU_FUNCTIONS_FOR_COMMANDS_HEADER
 #define SPU_FUNCTIONS_FOR_COMMANDS_HEADER
 
-#include "processor.h"
+#include "spu_structs.h"
 
 int SpuPush(Spu* spu, int codeOfCommand);
 

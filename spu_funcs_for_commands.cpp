@@ -11,6 +11,7 @@
 #include "spu_consts.h"
 #include "spu_generalFuncs.h"
 #include "spu_readFuncs.h"
+#include "spu_functionsForCommands.h"
 
 extern FILE* logfileProc;
 

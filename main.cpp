@@ -16,8 +16,8 @@ int main(int argc, const char *argv[])
     if (argc <= REQUIRED_NUMBER_OF_ARGUMENTS)
     {
         fprintf(logfileAsm, "ERROR: Too little arguments were passed.\n"
-                            "Input data format: execFileName.bin outputFileName.txt\n"
-                            "                                      (or stdout)\n");
+                            "       Input data format: execFileName.bin outputFileName.txt\n"
+                            "                                               (or stdout)\n");
         fclose(logfileProc);
         return 1;
     }

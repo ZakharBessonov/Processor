@@ -38,7 +38,7 @@ int SpuExecProgram(Spu* spu)
 
 int SpuCtor(Spu* spu, const char* execFileName, const char* outputFileName)
 {
-    if (ReadCodeFromExecFile(spu, execFileName) || OpenOutputFile(spu, outputFileName))
+    if (SpuReadCodeFromExecFile(spu, execFileName) || SpuOpenOutputFile(spu, outputFileName))
     {
         return 1;
     }
