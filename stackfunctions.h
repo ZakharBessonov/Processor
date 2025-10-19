@@ -14,14 +14,5 @@ int StackPop(Stack* stk, Stack_t* popElem);
 
 int StackDtor(Stack* stk);
 
-#ifdef HASH_DJB2
-
-uint64_t Hash(Stack* stk);
-
-size_t GetNUmOfHash(Stack* stk);
-
-#endif
-
-
 #endif
 

@@ -6,28 +6,20 @@
 #include "spu_structs.h"
 #include "stack.h"
 #include "stackfunctions.h"
-#include "commands.h"
-#include "spu_dumpFuncs.h"
+#include "spu_commands.h"
+#include "spu_dump_funcs.h"
 #include "spu_consts.h"
-#include "spu_generalFuncs.h"
-#include "spu_readFuncs.h"
-#include "spu_functionsForCommands.h"
+#include "spu_general_funcs.h"
+#include "spu_read_funcs.h"
+#include "spu_funcs_for_commands.h"
 
 extern FILE* logfileProc;
 
 int SpuPush(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
-
     if (StackPush(&(spu->apparatStack), spu->code[spu->pc]))
     {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -38,17 +30,9 @@ int SpuPush(Spu* spu, int codeOfCommand)
 
 int SpuPushReg(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
-
     if (StackPush(&(spu->apparatStack), spu->registers[spu->code[spu->pc]]))
     {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -59,18 +43,11 @@ int SpuPushReg(Spu* spu, int codeOfCommand)
 
 int SpuPop(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
     int temp = 0;
 
     if (StackPop(&(spu->apparatStack), &temp))
     {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -79,18 +56,11 @@ int SpuPop(Spu* spu, int codeOfCommand)
 
 int SpuPopReg(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
     int temp = 0;
 
     if (StackPop(&(spu->apparatStack), &temp))
     {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -102,15 +72,6 @@ int SpuPopReg(Spu* spu, int codeOfCommand)
 
 int SpuSqr(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
-
     int temp = 0;
     bool IsBadResult = StackPop(&(spu->apparatStack), &temp);
 
@@ -124,6 +85,7 @@ int SpuSqr(Spu* spu, int codeOfCommand)
 
     if (IsBadResult)
     {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return IsBadResult;
     }
 
@@ -132,17 +94,10 @@ int SpuSqr(Spu* spu, int codeOfCommand)
 
 int SpuRet(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
     int addressOfReturn = 0;
     if (StackPop(&(spu->returnRegisters), &addressOfReturn))
     {
-        fprintf(logfileProc, "ERROR: Stack of return registers is empty (from command\"ret\").\n");
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
     spu->pc = (size_t)addressOfReturn;
@@ -152,20 +107,12 @@ int SpuRet(Spu* spu, int codeOfCommand)
 
 int SpuIn(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
     int temp = 0;
 
     if (scanf("%d", &temp) <= 0)
     {
         fprintf(logfileProc, "ERROR: An error occurred while reading input "
-                             "in command \"%s\".\n", commands[codeOfCommand].name);
+                             "in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -179,19 +126,10 @@ int SpuIn(Spu* spu, int codeOfCommand)
 
 int SpuJmp(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
-
     if (spu->code[spu->pc] < 0 || (size_t)spu->code[spu->pc] >= spu->lengthOfCode)
     {
         fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address "
-                             "in command \"%s\".\n", commands[codeOfCommand].name);
+                             "in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -201,24 +139,16 @@ int SpuJmp(Spu* spu, int codeOfCommand)
 
 int SpuCall(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
-
     if (spu->code[spu->pc] < 0 || (size_t)spu->code[spu->pc] >= spu->lengthOfCode)
     {
         fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address "
-                             "in command \"%s\".\n", commands[codeOfCommand].name);
+                             "in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
     if (StackPush(&(spu->returnRegisters),(int)(spu->pc) + 1))
     {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
     spu->pc = (size_t)spu->code[spu->pc];
@@ -228,72 +158,45 @@ int SpuCall(Spu* spu, int codeOfCommand)
 
 int SpuBasicArithmetic(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
-
     int temp1 = 0, temp2 = 0;
     bool IsBadResult = StackPop(&(spu->apparatStack), &temp1) || StackPop(&(spu->apparatStack), &temp2);
 
+    if (temp1 == 0 && (codeOfCommand == CMD_DIV || codeOfCommand == CMD_MOD))
+    {
+        fprintf(logfileProc, "ERROR: Division by zero in command \"%s\".\n", cmds[codeOfCommand].name);
+        return 1;
+    }
+
     switch(codeOfCommand)
     {
-        case COMMAND_ADD:
+        case CMD_ADD:
             IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp1 + temp2);
             break;
-        case COMMAND_SUB:
+        case CMD_SUB:
             IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp2 - temp1);
             break;
-        case COMMAND_MUL:
+        case CMD_MUL:
             IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp2 * temp1);
             break;
-        case COMMAND_DIV:
-            if (temp1 == 0)
-            {
-                fprintf(logfileProc, "ERROR: Division by zero in command \"div\".\n");
-                return 1;
-            }
+        case CMD_DIV:
             IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp2 / temp1);
             break;
-        case COMMAND_MOD:
-            if (temp1 == 0)
-            {
-                fprintf(logfileProc, "ERROR: Division by zero in command \"mod\".\n");
-                return 1;
-            }
+        case CMD_MOD:
             IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp2 % temp1);
             break;
         default:
             break;
     }
 
-    if (IsBadResult)
-    {
-        return IsBadResult;
-    }
-
-    return 0;
+    return IsBadResult;
 }
 
 int SpuJumpFunc(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
-
     if (spu->code[spu->pc] < 0 || (size_t)spu->code[spu->pc] >= spu->lengthOfCode)
     {
         fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address "
-                             "in command \"%s\".\n", commands[codeOfCommand].name);
+                             "in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -302,6 +205,7 @@ int SpuJumpFunc(Spu* spu, int codeOfCommand)
 
     if (IsBadResult)
     {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return IsBadResult;
     }
 
@@ -309,22 +213,22 @@ int SpuJumpFunc(Spu* spu, int codeOfCommand)
 
     switch (codeOfCommand)
     {
-        case COMMAND_JB:
+        case CMD_JB:
             isNeedJump = temp1 < temp2;
             break;
-        case COMMAND_JBE:
+        case CMD_JBE:
             isNeedJump = temp1 <= temp2;
             break;
-        case COMMAND_JA:
+        case CMD_JA:
             isNeedJump = temp1 > temp2;
             break;
-        case COMMAND_JAE:
+        case CMD_JAE:
             isNeedJump = temp1 >= temp2;
             break;
-        case COMMAND_JE:
+        case CMD_JE:
             isNeedJump = temp1 == temp2;
             break;
-        case COMMAND_JNE:
+        case CMD_JNE:
             isNeedJump = temp1 != temp2;
             break;
         default:
@@ -344,31 +248,68 @@ int SpuJumpFunc(Spu* spu, int codeOfCommand)
 
 int SpuOutFunc(Spu* spu, int codeOfCommand)
 {
-    if (SpuVerify(spu))
-    {
-        fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", commands[codeOfCommand].name);
-        SpuDump(spu);
-        return 1;
-    }
-
-    (spu->pc)++;
     int gotNumberOrChar = 0;
 
     if (StackPop(&(spu->apparatStack), &gotNumberOrChar))
     {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
     switch(codeOfCommand)
     {
-        case COMMAND_OUT:
-            fprintf(output, "%d ", gotNumberOrChar);
+        case CMD_OUT:
+            fprintf(spu->outputFile, "%d ", gotNumberOrChar);
             break;
-        case COMMAND_OUTC:
-            fprintf(output, "%c ", gotNumberOrChar);
+        case CMD_OUTC:
+            fprintf(spu->outputFile, "%c ", gotNumberOrChar);
             break;
         default:
             break;
+    }
+
+    return 0;
+}
+
+int SpuPushm(Spu* spu, int codeOfCommand)
+{
+    if (StackPush(&(spu->apparatStack), spu->ram[spu->registers[spu->code[spu->pc]]]))
+    {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        return 1;
+    }
+
+    (spu->pc)++;
+
+    return 0;
+}
+
+int SpuPopm(Spu* spu, int codeOfCommand)
+{
+    int temp = 0;
+
+    if (StackPop(&(spu->apparatStack), &temp))
+    {
+        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        return 1;
+    }
+
+    spu->ram[spu->registers[spu->code[spu->pc]]] = temp;
+    (spu->pc)++;
+
+    return 0;
+}
+
+int SpuDraw(Spu* spu, int codeOfCommand)
+{
+    for (int i = 0; i < SIZE_OF_RAM; i++)
+    {
+        fprintf(spu->outputFile, "%c", spu->ram[i]);
+
+        if ((i + 1) % LENGTH_OF_ONE_SIDE_OF_RAM == 0)
+        {
+            fprintf(spu->outputFile, "\n");
+        }
     }
 
     return 0;

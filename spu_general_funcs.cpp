@@ -6,11 +6,11 @@
 #include "spu_structs.h"
 #include "stack.h"
 #include "stackfunctions.h"
-#include "commands.h"
-#include "spu_dumpFuncs.h"
+#include "spu_commands.h"
+#include "spu_dump_funcs.h"
 #include "spu_consts.h"
-#include "spu_generalFuncs.h"
-#include "spu_readFuncs.h"
+#include "spu_general_funcs.h"
+#include "spu_read_funcs.h"
 
 extern FILE* logfileProc;
 
@@ -22,11 +22,19 @@ int SpuExecProgram(Spu* spu)
         codeOfCommand = spu->code[spu->pc];
         if (codeOfCommand < 0 || codeOfCommand >= CNT_OF_COMMANDS)
         {
-            fprintf(logfileProc, "ERROR: Unknown command on address [%d].\n", spu->pc);
+            fprintf(logfileProc, "ERROR: Unknown command on address [%zu].\n", spu->pc);
             return 1;
         }
 
-        if (commands[spu->code[spu->pc]].func(spu, command))
+        if (SpuVerify(spu))
+        {
+            fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", cmds[codeOfCommand].name);
+            SpuDump(spu, codeOfCommand);
+            return 1;
+        }
+
+        (spu->pc)++;
+        if (cmds[codeOfCommand].func(spu, codeOfCommand))
         {
             return 1;
         }
@@ -97,6 +105,10 @@ int SpuDtor(Spu* spu)
     for (int i = 0; i < CNT_OF_REGISTERS; i++)
     {
         spu->registers[i] = 0;
+    }
+    for (int i = 0; i < SIZE_OF_RAM; i++)
+    {
+        spu->ram[i] = 0;
     }
     fclose(spu->outputFile);
 

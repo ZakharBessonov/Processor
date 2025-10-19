@@ -4,6 +4,8 @@
 #include "stack.h"
 
 const int CNT_OF_REGISTERS = 8;
+const int SIZE_OF_RAM = 6400;
+const int LENGTH_OF_ONE_SIDE_OF_RAM = 80;
 
 struct Spu
 {
@@ -13,6 +15,7 @@ struct Spu
     Stack   apparatStack;
     int     registers[CNT_OF_REGISTERS];
     Stack   returnRegisters;
+    int     ram[SIZE_OF_RAM];
     FILE*   outputFile;
 };
 

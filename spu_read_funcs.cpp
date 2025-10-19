@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <stdarg.h>
 #include <sys/types.h>
@@ -8,11 +10,11 @@
 #include "spu_structs.h"
 #include "stack.h"
 #include "stackfunctions.h"
-#include "commands.h"
-#include "spu_dumpFuncs.h"
+#include "spu_commands.h"
+#include "spu_dump_funcs.h"
 #include "spu_consts.h"
-#include "spu_generalFuncs.h"
-#include "spu_readFuncs.h"
+#include "spu_general_funcs.h"
+#include "spu_read_funcs.h"
 
 extern FILE* logfileProc;
 
@@ -33,7 +35,7 @@ int SpuReadCodeFromExecFile(Spu* spu, const char* execFileName)
         return 1;
     }
 
-    size_t sizeOfFile = SizeOfFile(fp);
+    size_t sizeOfFile = SpuSizeOfFile(fp);
 
     spu->lengthOfCode = sizeOfFile / sizeof(int) - HEADER_OFFSET;
     spu->code = (int*) calloc(spu->lengthOfCode, sizeof(int));
@@ -46,13 +48,13 @@ int SpuReadCodeFromExecFile(Spu* spu, const char* execFileName)
     int headerOfFile[HEADER_OFFSET] = {};
     fread(headerOfFile, sizeof(int), HEADER_OFFSET, fp);
 
-    if (CheckSignature(headerOfFile))
+    if (SpuCheckSignature(headerOfFile))
     {
         return 1;
     }
     fread(spu->code, sizeof(int), spu->lengthOfCode, fp);
 
-    fclose(fp)
+    fclose(fp);
 
     return 0;
 }
@@ -68,7 +70,7 @@ int SpuOpenOutputFile(Spu* spu, const char* outputFileName)
     FILE* fp = fopen(outputFileName, "w");
     if (fp == NULL)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while opening outputFile \"%s\"\n", execFileName);
+        fprintf(logfileProc, "ERROR: An error occurred while opening outputFile \"%s\"\n", outputFileName);
         return 1;
     }
     spu->outputFile = fp;
