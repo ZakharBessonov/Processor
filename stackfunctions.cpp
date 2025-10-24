@@ -8,6 +8,7 @@
 #include "stackfunctions.h"
 #include "spu_consts.h"
 #include "spu_dump_funcs.h"
+#include "spu_help_funcs.h"
 
 extern FILE* logfileProc;
 
@@ -43,20 +44,20 @@ int StackCtor(Stack* stk, ssize_t newCapacity)
 {
     if (stk == NULL)
     {
-        fprintf(logfileProc, "A null pointer to stk was passed. Action canceled.\n");
+        PRINT_LOG_FILE_SPU("A null pointer to stk was passed. Action canceled.\n");
         return NULL_STACK_POINTER;
     }
 
     if (newCapacity < 0)
     {
-        fprintf(logfileProc, "Invalid capacity transferred. Action cancelled.\n");
+        PRINT_LOG_FILE_SPU("Invalid capacity transferred. Action cancelled.\n");
         return BAD_CAPACITY;
     }
 
     Stack_t* tempPt = (Stack_t*) calloc((size_t)newCapacity, sizeof(Stack_t));
     if (tempPt == NULL)
     {
-        fprintf(logfileProc, "An error occurred while allocating memory for stack. Action cancelled.\n");
+        PRINT_LOG_FILE_SPU("An error occurred while allocating memory for stack. Action cancelled.\n");
         return NULL_DATA_POINTER;
     }
 
@@ -74,8 +75,8 @@ int StackPush(Stack* stk, Stack_t newElem)
     int errors = StackVerify(stk);
     if (errors)
     {
-        fprintf(logfileProc, "A stack containing errors was passed. Action cancelled.\n");
-        StackDump(stk, __FILE__, __func__, __LINE__);
+        PRINT_LOG_FILE_SPU("A stack containing errors was passed. Action cancelled.\n");
+        StackDump(stk, __FILE__, __LINE__);
         return errors;
     }
 
@@ -84,8 +85,8 @@ int StackPush(Stack* stk, Stack_t newElem)
         Stack_t* tempPt = (Stack_t*) realloc(stk->data, (2 * ((size_t)stk->capacity + 1)) * sizeof(Stack_t));
         if (tempPt == NULL)
         {
-            fprintf(logfileProc, "An out of memory condition occurred while automatically growing"
-                                 " the data buffer. Action cancelled.\n");
+            PRINT_LOG_FILE_SPU("An out of memory condition occurred while automatically growing"
+                               " the data buffer. Action cancelled.\n");
             return NULL_DATA_POINTER;
         }
 
@@ -106,14 +107,14 @@ Stack_t StackGetElem(Stack* stk, Stack_t* getElem)
     int errors = StackVerify(stk);
     if (errors)
     {
-        fprintf(logfileProc, "A stack containing errors was passed. Action cancelled.\n");
-        StackDump(stk, __FILE__, __func__, __LINE__);
+        PRINT_LOG_FILE_SPU("A stack containing errors was passed. Action cancelled.\n");
+        StackDump(stk, __FILE__, __LINE__);
         return errors;
     }
 
     if (stk->size == 0)
     {
-        fprintf(logfileProc, "Attempt to get an element from an empty stack. Action cancelled.\n");
+        PRINT_LOG_FILE_SPU("Attempt to get an element from an empty stack. Action cancelled.\n");
         return BAD_SIZE;
     }
 
@@ -127,14 +128,14 @@ int StackPop(Stack* stk, Stack_t* popElem)
     int errors = StackVerify(stk);
     if (errors)
     {
-        fprintf(logfileProc, "A stack containing errors was passed. Action cancelled.\n");
-        StackDump(stk, __FILE__, __func__, __LINE__);
+        PRINT_LOG_FILE_SPU("A stack containing errors was passed. Action cancelled.\n");
+        StackDump(stk, __FILE__, __LINE__);
         return errors;
     }
 
     if (stk->size == 0)
     {
-        fprintf(logfileProc, "Attempt to remove an element from an empty stack. Action cancelled.\n");
+        PRINT_LOG_FILE_SPU("Attempt to remove an element from an empty stack. Action cancelled.\n");
         return BAD_SIZE;
     }
 
@@ -150,8 +151,8 @@ int StackDtor(Stack* stk)
     int errors = StackVerify(stk);
     if (errors)
     {
-        fprintf(logfileProc, "A stack containing errors was passed. Action cancelled.\n");
-        StackDump(stk, __FILE__, __func__, __LINE__);
+        PRINT_LOG_FILE_SPU("A stack containing errors was passed. Action cancelled.\n");
+        StackDump(stk, __FILE__, __LINE__);
         return errors;
     }
 

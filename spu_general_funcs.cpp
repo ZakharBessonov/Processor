@@ -6,11 +6,12 @@
 #include "spu_structs.h"
 #include "stack.h"
 #include "stackfunctions.h"
-#include "spu_commands.h"
+#include "codes_of_commands.h"
 #include "spu_dump_funcs.h"
 #include "spu_consts.h"
 #include "spu_general_funcs.h"
 #include "spu_read_funcs.h"
+#include "spu_help_funcs.h"
 
 extern FILE* logfileProc;
 
@@ -22,13 +23,13 @@ int SpuExecProgram(Spu* spu)
         codeOfCommand = spu->code[spu->pc];
         if (codeOfCommand < 0 || codeOfCommand >= CNT_OF_COMMANDS)
         {
-            fprintf(logfileProc, "ERROR: Unknown command on address [%zu].\n", spu->pc);
+            PRINT_LOG_FILE_SPU("ERROR: Unknown command on address [%zu].\n", spu->pc);
             return 1;
         }
 
         if (SpuVerify(spu))
         {
-            fprintf(logfileProc, "ERROR: Invalid SPU was passed in command \"%s\".\n", cmds[codeOfCommand].name);
+            PRINT_LOG_FILE_SPU("ERROR: Invalid SPU was passed in command \"%s\".\n", cmds[codeOfCommand].name);
             SpuDump(spu, codeOfCommand);
             return 1;
         }
@@ -44,14 +45,9 @@ int SpuExecProgram(Spu* spu)
 }
 
 
-int SpuCtor(Spu* spu, const char* execFileName, const char* outputFileName)
+int SpuCtor(Spu* spu)
 {
-    if (SpuReadCodeFromExecFile(spu, execFileName) || SpuOpenOutputFile(spu, outputFileName))
-    {
-        return 1;
-    }
-
-    if (StackCtor(&(spu->apparatStack), 2) || StackCtor(&(spu->returnRegisters), 2))
+    if (StackCtor(&(spu->computationStack), 2) || StackCtor(&(spu->returnRegisters), 2))
     {
         return 1;
     }
@@ -80,7 +76,7 @@ int SpuVerify(Spu* spu)
         errors |= BAD_PC;
     }
 
-    if (StackVerify(&(spu->apparatStack)))
+    if (StackVerify(&(spu->computationStack)))
     {
         errors |= BAD_APPARAT_STACK;
     }
@@ -95,7 +91,7 @@ int SpuVerify(Spu* spu)
 
 int SpuDtor(Spu* spu)
 {
-    StackDtor(&(spu->apparatStack));
+    StackDtor(&(spu->computationStack));
     StackDtor(&(spu->returnRegisters));
 
     free(spu->code);

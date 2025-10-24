@@ -8,7 +8,8 @@ flags=-I/Users/zaharbessonov/Desktop/Учёба\ в\ институте\ /Ин
 
 CC=g++
 
-sources=main.cpp spu_read_funcs.cpp spu_general_funcs.cpp spu_funcs_for_commands.cpp spu_dump_funcs.cpp  spu_help_funcs.cpp stackfunctions.cpp
+sources=main.cpp spu_read_funcs.cpp spu_general_funcs.cpp spu_funcs_for_commands.cpp spu_dump_funcs.cpp  spu_help_funcs.cpp\
+ stackfunctions.cpp ../size_of_file.cpp
 
 all:
 	$(CC) $(sources) -o processor $(flags)

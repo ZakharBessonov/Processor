@@ -10,38 +10,32 @@
 #include "spu_structs.h"
 #include "stack.h"
 #include "stackfunctions.h"
-#include "spu_commands.h"
+#include "codes_of_commands.h"
 #include "spu_dump_funcs.h"
 #include "spu_consts.h"
 #include "spu_general_funcs.h"
 #include "spu_read_funcs.h"
+#include "spu_help_funcs.h"
+#include "../size_of_file.h"
 
 extern FILE* logfileProc;
-
-size_t SpuSizeOfFile(FILE* fp)
-{
-    int descriptor = fileno(fp);
-    struct stat statistics = {};
-    fstat(descriptor, &statistics);
-    return (size_t)statistics.st_size;
-}
 
 int SpuReadCodeFromExecFile(Spu* spu, const char* execFileName)
 {
     FILE* fp = fopen(execFileName, "rb");
     if (fp == NULL)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while opening execFile \"%s\"\n", execFileName);
+        PRINT_LOG_FILE_SPU("ERROR: An error occurred while opening execFile \"%s\"\n", execFileName);
         return 1;
     }
 
-    size_t sizeOfFile = SpuSizeOfFile(fp);
+    size_t sizeOfFile = SizeOfFile(fp);
 
     spu->lengthOfCode = sizeOfFile / sizeof(int) - HEADER_OFFSET;
     spu->code = (int*) calloc(spu->lengthOfCode, sizeof(int));
     if (spu->code == NULL)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while creating buffer for reading execFile\n");
+        PRINT_LOG_FILE_SPU("ERROR: An error occurred while creating buffer for reading execFile\n");
         return 1;
     }
 
@@ -70,7 +64,7 @@ int SpuOpenOutputFile(Spu* spu, const char* outputFileName)
     FILE* fp = fopen(outputFileName, "w");
     if (fp == NULL)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while opening outputFile \"%s\"\n", outputFileName);
+        PRINT_LOG_FILE_SPU("ERROR: An error occurred while opening outputFile \"%s\"\n", outputFileName);
         return 1;
     }
     spu->outputFile = fp;
@@ -82,13 +76,13 @@ int SpuCheckSignature(int* headerOfFile)
 {
     if (headerOfFile[0] != VERSION)
     {
-        fprintf(logfileProc, "ERROR: Version of processor and executable file are not same!\n");
+        PRINT_LOG_FILE_SPU("ERROR: Version of processor and executable file are not same!\n");
         return 1;
     }
 
     if (headerOfFile[1] != SIGNATURE_1 || headerOfFile[2] != SIGNATURE_2 || headerOfFile[3] != SIGNATURE_3)
     {
-        fprintf(logfileProc, "ERROR: The file signature is incorrect.\n");
+        PRINT_LOG_FILE_SPU("ERROR: The file signature is incorrect.\n");
         return 1;
     }
 

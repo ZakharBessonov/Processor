@@ -5,7 +5,7 @@
 
 int SpuExecProgram(Spu* spu);
 
-int SpuCtor(Spu* spu, const char* execFileName, const char* outputFileName);
+int SpuCtor(Spu* spu);
 
 int SpuVerify(Spu* spu);
 

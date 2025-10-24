@@ -3,8 +3,6 @@
 
 #include "spu_structs.h"
 
-size_t SpuSizeOfFile(FILE* fp);
-
 int SpuReadCodeFromExecFile(Spu* spu, const char* execFileName);
 
 int SpuOpenOutputFile(Spu* spu, const char* outputFileName);

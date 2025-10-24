@@ -22,17 +22,21 @@ int main(int argc, const char *argv[])
 
     if (argc <= REQUIRED_NUMBER_OF_ARGUMENTS)
     {
-        fprintf(logfileProc, "ERROR: Too little arguments were passed.\n"
+        PRINT_LOG_FILE_SPU("ERROR: Too little arguments were passed.\n"
                             "       Input data format: execFileName.bin outputFileName.txt\n"
                             "                                               (or stdout)\n");
-        fclose(logfileProc);
         return 0;
     }
 
     Spu spu = {};
-    if (SpuCtor(&spu, argv[1], argv[2]))
+    if (SpuCtor(&spu))
     {
         return 0;
+    }
+
+    if (SpuReadCodeFromExecFile(&spu, argv[1]) || SpuOpenOutputFile(&spu, argv[2]))
+    {
+        return 1;
     }
 
     if (SpuExecProgram(&spu))

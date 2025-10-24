@@ -6,20 +6,21 @@
 #include "spu_structs.h"
 #include "stack.h"
 #include "stackfunctions.h"
-#include "spu_commands.h"
+#include "codes_of_commands.h"
 #include "spu_dump_funcs.h"
 #include "spu_consts.h"
 #include "spu_general_funcs.h"
 #include "spu_read_funcs.h"
 #include "spu_funcs_for_commands.h"
+#include "spu_help_funcs.h"
 
 extern FILE* logfileProc;
 
 int SpuPush(Spu* spu, int codeOfCommand)
 {
-    if (StackPush(&(spu->apparatStack), spu->code[spu->pc]))
+    if (StackPush(&(spu->computationStack), spu->code[spu->pc]))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -30,9 +31,9 @@ int SpuPush(Spu* spu, int codeOfCommand)
 
 int SpuPushReg(Spu* spu, int codeOfCommand)
 {
-    if (StackPush(&(spu->apparatStack), spu->registers[spu->code[spu->pc]]))
+    if (StackPush(&(spu->computationStack), spu->registers[spu->code[spu->pc]]))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -45,9 +46,9 @@ int SpuPop(Spu* spu, int codeOfCommand)
 {
     int temp = 0;
 
-    if (StackPop(&(spu->apparatStack), &temp))
+    if (StackPop(&(spu->computationStack), &temp))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -58,9 +59,9 @@ int SpuPopReg(Spu* spu, int codeOfCommand)
 {
     int temp = 0;
 
-    if (StackPop(&(spu->apparatStack), &temp))
+    if (StackPop(&(spu->computationStack), &temp))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -73,19 +74,19 @@ int SpuPopReg(Spu* spu, int codeOfCommand)
 int SpuSqr(Spu* spu, int codeOfCommand)
 {
     int temp = 0;
-    bool IsBadResult = StackPop(&(spu->apparatStack), &temp);
+    bool IsBadResult = StackPop(&(spu->computationStack), &temp);
 
     if (temp < 0)
     {
-        fprintf(logfileProc, "ERROR: Square root of a negative number in command \"sqr\".\n");
+        PRINT_LOG_FILE_SPU("ERROR: Square root of a negative number in command \"sqr\".\n");
         return 1;
     }
 
-    IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), (int)lround(sqrtl((long double)temp)));
+    IsBadResult = IsBadResult || StackPush(&(spu->computationStack), (int)lround(sqrtl((long double)temp)));
 
     if (IsBadResult)
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return IsBadResult;
     }
 
@@ -97,7 +98,7 @@ int SpuRet(Spu* spu, int codeOfCommand)
     int addressOfReturn = 0;
     if (StackPop(&(spu->returnRegisters), &addressOfReturn))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
     spu->pc = (size_t)addressOfReturn;
@@ -111,12 +112,12 @@ int SpuIn(Spu* spu, int codeOfCommand)
 
     if (scanf("%d", &temp) <= 0)
     {
-        fprintf(logfileProc, "ERROR: An error occurred while reading input "
-                             "in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: An error occurred while reading input "
+                           "in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
-    if (StackPush(&(spu->apparatStack), temp))
+    if (StackPush(&(spu->computationStack), temp))
     {
         return 1;
     }
@@ -128,8 +129,8 @@ int SpuJmp(Spu* spu, int codeOfCommand)
 {
     if (spu->code[spu->pc] < 0 || (size_t)spu->code[spu->pc] >= spu->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address "
-                             "in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Attempt to switch to a non-existent address "
+                           "in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -141,14 +142,14 @@ int SpuCall(Spu* spu, int codeOfCommand)
 {
     if (spu->code[spu->pc] < 0 || (size_t)spu->code[spu->pc] >= spu->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address "
-                             "in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Attempt to switch to a non-existent address "
+                           "in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
     if (StackPush(&(spu->returnRegisters),(int)(spu->pc) + 1))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
     spu->pc = (size_t)spu->code[spu->pc];
@@ -159,30 +160,30 @@ int SpuCall(Spu* spu, int codeOfCommand)
 int SpuBasicArithmetic(Spu* spu, int codeOfCommand)
 {
     int temp1 = 0, temp2 = 0;
-    bool IsBadResult = StackPop(&(spu->apparatStack), &temp1) || StackPop(&(spu->apparatStack), &temp2);
+    bool IsBadResult = StackPop(&(spu->computationStack), &temp1) || StackPop(&(spu->computationStack), &temp2);
 
     if (temp1 == 0 && (codeOfCommand == CMD_DIV || codeOfCommand == CMD_MOD))
     {
-        fprintf(logfileProc, "ERROR: Division by zero in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Division by zero in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
     switch(codeOfCommand)
     {
         case CMD_ADD:
-            IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp1 + temp2);
+            IsBadResult = IsBadResult || StackPush(&(spu->computationStack), temp1 + temp2);
             break;
         case CMD_SUB:
-            IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp2 - temp1);
+            IsBadResult = IsBadResult || StackPush(&(spu->computationStack), temp2 - temp1);
             break;
         case CMD_MUL:
-            IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp2 * temp1);
+            IsBadResult = IsBadResult || StackPush(&(spu->computationStack), temp2 * temp1);
             break;
         case CMD_DIV:
-            IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp2 / temp1);
+            IsBadResult = IsBadResult || StackPush(&(spu->computationStack), temp2 / temp1);
             break;
         case CMD_MOD:
-            IsBadResult = IsBadResult || StackPush(&(spu->apparatStack), temp2 % temp1);
+            IsBadResult = IsBadResult || StackPush(&(spu->computationStack), temp2 % temp1);
             break;
         default:
             break;
@@ -195,17 +196,17 @@ int SpuJumpFunc(Spu* spu, int codeOfCommand)
 {
     if (spu->code[spu->pc] < 0 || (size_t)spu->code[spu->pc] >= spu->lengthOfCode)
     {
-        fprintf(logfileProc, "ERROR: Attempt to switch to a non-existent address "
-                             "in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Attempt to switch to a non-existent address "
+                           "in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
     int temp1 = 0, temp2 = 0;
-    int IsBadResult = StackPop(&(spu->apparatStack), &temp2) || StackPop(&(spu->apparatStack), &temp1);
+    int IsBadResult = StackPop(&(spu->computationStack), &temp2) || StackPop(&(spu->computationStack), &temp1);
 
     if (IsBadResult)
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return IsBadResult;
     }
 
@@ -250,9 +251,9 @@ int SpuOutFunc(Spu* spu, int codeOfCommand)
 {
     int gotNumberOrChar = 0;
 
-    if (StackPop(&(spu->apparatStack), &gotNumberOrChar))
+    if (StackPop(&(spu->computationStack), &gotNumberOrChar))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -262,7 +263,7 @@ int SpuOutFunc(Spu* spu, int codeOfCommand)
             fprintf(spu->outputFile, "%d ", gotNumberOrChar);
             break;
         case CMD_OUTC:
-            fprintf(spu->outputFile, "%c ", gotNumberOrChar);
+            fprintf(spu->outputFile, "%c", gotNumberOrChar);
             break;
         default:
             break;
@@ -273,9 +274,9 @@ int SpuOutFunc(Spu* spu, int codeOfCommand)
 
 int SpuPushm(Spu* spu, int codeOfCommand)
 {
-    if (StackPush(&(spu->apparatStack), spu->ram[spu->registers[spu->code[spu->pc]]]))
+    if (StackPush(&(spu->computationStack), spu->ram[spu->registers[spu->code[spu->pc]]]))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -288,9 +289,9 @@ int SpuPopm(Spu* spu, int codeOfCommand)
 {
     int temp = 0;
 
-    if (StackPop(&(spu->apparatStack), &temp))
+    if (StackPop(&(spu->computationStack), &temp))
     {
-        fprintf(logfileProc, "ERROR: Error in apparatStack in command \"%s\".\n", cmds[codeOfCommand].name);
+        PRINT_LOG_FILE_SPU("ERROR: Error in computationStack in command \"%s\".\n", cmds[codeOfCommand].name);
         return 1;
     }
 
@@ -304,7 +305,7 @@ int SpuDraw(Spu* spu, int codeOfCommand)
 {
     for (int i = 0; i < SIZE_OF_RAM; i++)
     {
-        fprintf(spu->outputFile, "%c", spu->ram[i]);
+        fprintf(spu->outputFile, "%c%c", spu->ram[i], spu->ram[i]);
 
         if ((i + 1) % LENGTH_OF_ONE_SIDE_OF_RAM == 0)
         {

@@ -3,7 +3,7 @@
 
 #include "spu_structs.h"
 
-void StackDump(Stack* stk, const char* file, const char* func, int line);
+void StackDump(Stack* stk, const char* file, int line);
 
 int SpuDump(Spu* spu, int codeOfCommand);
 

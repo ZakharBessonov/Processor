@@ -12,7 +12,7 @@ struct Spu
     int*    code;
     size_t  lengthOfCode;
     size_t  pc;
-    Stack   apparatStack;
+    Stack   computationStack;
     int     registers[CNT_OF_REGISTERS];
     Stack   returnRegisters;
     int     ram[SIZE_OF_RAM];

@@ -5,15 +5,16 @@
 #include "spu_consts.h"
 #include "spu_dump_funcs.h"
 #include "spu_structs.h"
+#include "spu_help_funcs.h"
 #include "spu_general_funcs.h"
 
 extern FILE* logfileProc;
 
-void StackDump(Stack* stk, const char* file, const char* func, int line)
+void StackDump(Stack* stk, const char* file, int line)
 {
     int errors = StackVerify(stk);
-    fprintf(logfileProc, "\nStackDump from %s at %s:%d\n"
-                "stack [%p]\n", func, file, line, stk);
+    fprintf(logfileProc, "\nStackDump at %s:%d\n"
+                       "stack [%p]\n", file, line, stk);
 
     if (errors & NULL_STACK_POINTER)
     {
@@ -22,7 +23,7 @@ void StackDump(Stack* stk, const char* file, const char* func, int line)
         return;
     }
 
-    fprintf(logfileProc, "{\n"
+     fprintf(logfileProc, "{\n"
                      "   capacity = %zd ", stk->capacity);
     if (errors & BAD_CAPACITY) {
         fprintf(logfileProc, "(BAD_CAPACITY)\n");
@@ -40,7 +41,7 @@ void StackDump(Stack* stk, const char* file, const char* func, int line)
     fprintf(logfileProc, "   data[%p] ", stk->data);
     if (errors & NULL_DATA_POINTER) {
         fprintf(logfileProc, "(NULL_DATA_POINTER)\n"
-                         "}\n");
+                           "}\n");
         fflush(logfileProc);
         return;
     } else {
@@ -66,15 +67,13 @@ void StackDump(Stack* stk, const char* file, const char* func, int line)
         }
 
         fprintf(logfileProc, "   }\n"
-                         "}\n");
+                           "}\n");
 
         if (isCapacityValid && isSizeValid)
         {
             fprintf(logfileProc, "No errors found\n");
         }
     }
-
-    fflush(logfileProc);
 }
 
 int SpuDump(Spu* spu, int codeOfCommand)
@@ -85,6 +84,7 @@ int SpuDump(Spu* spu, int codeOfCommand)
     if (errors & NULL_SPU_POINTER)
     {
         fprintf(logfileProc, "(BAD_SPU)\n");
+        fflush(logfileProc);
         return 1;
     }
 
@@ -127,6 +127,7 @@ int SpuDump(Spu* spu, int codeOfCommand)
         SpuPrintReturnRegisters(spu);
     }
 
+    fflush(logfileProc);
     return 0;
 }
 
@@ -150,24 +151,28 @@ void SpuPrintCode(Spu* spu)
         }
         fprintf(logfileProc, "\n                     ^^^^\n");
     }
+
+    fflush(logfileProc);
 }
 
 void SpuPrintApparatStack(Spu* spu)
 {
     fprintf(logfileProc, "Stack: ");
 
-    if (spu->apparatStack.size == 0)
+    if (spu->computationStack.size == 0)
     {
         fprintf(logfileProc, "empty\n");
     }
     else
     {
-        for (int i = 0; i < spu->apparatStack.size; i++)
+        for (int i = 0; i < spu->computationStack.size; i++)
         {
-            fprintf(logfileProc, "%d ", spu->apparatStack.data[i]);
+            fprintf(logfileProc, "%d ", spu->computationStack.data[i]);
         }
         fprintf(logfileProc, "\n");
     }
+
+    fflush(logfileProc);
 }
 
 void SpuPrintRegisters(Spu* spu)
@@ -196,4 +201,6 @@ void SpuPrintReturnRegisters(Spu* spu)
         }
         fprintf(logfileProc, "\n");
     }
+
+    fflush(logfileProc);
 }
